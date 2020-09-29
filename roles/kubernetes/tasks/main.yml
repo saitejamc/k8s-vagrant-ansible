@@ -1,0 +1,20 @@
+---
+#- include_role: docker
+
+- name: Install apt-transport-https and curl packages 
+  apt: "name={{ req_packages }} state=present"
+
+- name: Add the apt-key from gc
+  apt_key: url=https://packages.cloud.google.com/apt/doc/apt-key.gpg state=present
+
+- name: Insert the apt list line 
+  lineinfile: 
+    name: /etc/apt/sources.list.d/kubernetes.list 
+    line: "deb https://apt.kubernetes.io/ kubernetes-xenial main" 
+    create: yes
+
+- name: update apt-cache 
+  apt: update_cache=yes
+
+- name: Install the kube packages
+  apt: "name={{ kube_packages }} state=present"

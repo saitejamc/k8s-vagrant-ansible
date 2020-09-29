@@ -1,0 +1,8 @@
+req_packages:
+  - curl
+  - apt-transport-https 
+
+kube_packages: 
+  - kubelet
+  - kubeadm 
+  - kubectl

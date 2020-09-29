@@ -1,0 +1,23 @@
+---
+- hosts: all
+  become: true 
+  gather_facts: true
+  
+  pre_tasks:
+
+  - name: copy the key to authorized_keys on vagrant user
+    lineinfile: line={{ lookup('file','files/k8s_rsa.pub') }} path=/home/vagrant/.ssh/authorized_keys create=yes 
+    
+  - name: copy sshd file
+    copy: src=files/sshd_config dest=/etc/ssh/sshd_config
+    register: reg_sshd_config
+
+  - name: restart sshd service
+    service: name=sshd state=restarted enabled=true
+    when: reg_sshd_config.changed 
+
+  roles:
+    - docker
+    - kubernetes 
+
+

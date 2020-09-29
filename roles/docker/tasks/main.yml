@@ -1,0 +1,37 @@
+---
+- name: Install prerequisites
+  apt:
+    name: ['apt-transport-https','ca-certificates','curl','gnupg2','software-properties-common'] 
+    update_cache: yes
+
+- name: Add Docker GPG key
+  apt_key: url=https://download.docker.com/linux/ubuntu/gpg
+
+- name: Add Docker APT repository
+  apt_repository: repo="deb [arch=amd64] https://download.docker.com/linux/{{ansible_distribution|lower}} {{ansible_distribution_release}} edge"
+
+- name: Install Docker
+  apt: name=docker-ce update_cache=yes
+
+- name: Download docker-compose 
+  get_url: "url=https://github.com/docker/compose/releases/download/1.24.0/docker-compose-{{ ansible_system }}-{{ansible_architecture}} dest=/usr/sbin/docker-compose mode=0755"
+
+- name: Ensure docker socket perms are changed
+  lineinfile:
+    path: /lib/systemd/system/docker.socket
+    regexp: '^SocketMode='
+    line: SocketMode=0777
+  register: reg_sock
+
+- name: Reload systemd 
+  systemd: daemon-reload=true  
+  when: reg_sock.changed 
+
+- name: Add ubuntu and vagrant users to docker group
+  user: name={{ item }} groups=docker append=yes
+  with_items:
+  - vagrant
+  - ubuntu
+
+- name: Start docker service
+  service: name=docker state=started enabled=true 
